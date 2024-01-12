@@ -1,7 +1,7 @@
-from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QToolBar, QTextEdit, QInputDialog
+from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QToolBar, QTextEdit, QInputDialog
 from PySide6.QtCore import QSize, QTimer
-from script import CoreLogic
 import sys
+from script import CoreLogic
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -36,7 +36,7 @@ class MainWindow(QMainWindow):
         toolbar.addWidget(check_logs_button)
         toolbar.addWidget(clear_console_button)
         self.addToolBar(toolbar)
-        self.setFixedSize(QSize(800,600))
+        self.setFixedSize(QSize(800, 600))
 
         self.timer = QTimer()
 
@@ -52,7 +52,7 @@ class MainWindow(QMainWindow):
     def run_monitor(self):
         if self.monitor_button.isChecked():
             if self.first_run:
-                #Prompt the user for the delay only on the first run
+                # Prompt the user for the delay only on the first run
                 delay, user_accepted = QInputDialog.getInt(self, "Input Delay", "Input delay (ms):")
 
                 if user_accepted:

@@ -5,18 +5,23 @@ import uuid
 import validators
 from concurrent.futures import ThreadPoolExecutor
 from PySide6.QtWidgets import QInputDialog
+from PySide6.QtCore import QObject, Signal
 
-class CoreLogic:
+class CoreLogic(QObject):
+    update_console_signal = Signal(str)
+
     def __init__(self, console_stream):
+        super().__init__()
         self.script_directory = os.path.dirname(os.path.realpath(__file__))
         self.logs_directory = os.path.join(self.script_directory, 'logs')
-        #Create the logs directory if it doesn't exist
+        # Create the logs directory if it doesn't exist
         if not os.path.exists(self.logs_directory):
             os.makedirs(self.logs_directory)
 
         self.database_path = os.path.join(self.logs_directory, 'uptime_logs.db')
         self.urls = []
         self.console = console_stream
+        self.update_console_signal.connect(console_stream.write)
         self.create_table()
 
     def create_table(self):
@@ -82,16 +87,17 @@ class CoreLogic:
                 response = requests.get(url)
                 response_time = response.elapsed.total_seconds()
                 status_code = str(response.status_code)
-                self.console.write(f"URL: {url}, STATUS: {'UP' if response.ok else 'FAIL'}, RESPONSE TIME: {response_time}, STATUS CODE: {status_code}\n")
+                self.update_console_signal.emit(f"URL: {url}, STATUS: {'UP' if response.ok else 'FAIL'}, RESPONSE TIME: {response_time}, STATUS CODE: {status_code}\n")
                 self.log_status(url, "UP" if response.ok else "FAIL", response_time, status_code)
             except requests.RequestException as e:
-                self.console.write(f"Error checking uptime for {url}: {e}\n")
+                self.update_console_signal.emit(f"Error checking uptime for {url}: {e}\n")
                 self.log_status(url, "FAIL", None, None)
             except Exception as e:
-                self.console.write(f"Unexpected error for {url}: {e}\n")
+                self.update_console_signal.emit(f"Unexpected error for {url}: {e}\n")
 
         try:
             with ThreadPoolExecutor() as executor:
                 executor.map(check_single_url, self.urls)
         except Exception as e:
-            self.console.write(f"Error during concurrent uptime checks: {e}\n")
+            self.update_console_signal.emit(f"Error during concurrent uptime checks: {e}\n")
+
